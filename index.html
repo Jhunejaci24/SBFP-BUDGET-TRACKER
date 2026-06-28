@@ -1,0 +1,957 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SBFP Core Logistics Matrix Pro | Dev: Romulo J. Jacinto Jr.</title>
+    <style>
+        /* Shared Framework Styles & Fluid Variables */
+        :root { 
+            --primary: #1f2a44; 
+            --accent: #10b981; 
+            --bg: #f3f4f6; 
+        }
+        * { box-sizing: border-box; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: var(--bg); margin: 0; padding: 0; color: #333; }
+        
+        /* 📱 RESPONSIVE WRAPPER & SIDEBAR SYSTEM */
+        .wrapper { display: flex; min-height: 100vh; flex-direction: row; }
+        .sidebar { width: 280px; background: var(--primary); color: white; padding: 20px; display: flex; flex-direction: column; justify-content: space-between; flex-shrink: 0; }
+        .sidebar h2 { font-size: 18px; margin-bottom: 5px; color: #fff; text-align: center; }
+        .dev-badge { text-align: center; font-size: 11px; color: #94a3b8; background: rgba(255,255,255,0.05); padding: 8px; border-radius: 6px; border: 1px dashed rgba(255,255,255,0.1); margin-bottom: 20px; }
+        
+        .menu { list-style: none; padding: 0; margin: 0; flex-grow: 1; }
+        .menu li { padding: 12px 15px; border-radius: 6px; cursor: pointer; margin-bottom: 8px; transition: 0.2s; font-size: 14px; display: flex; align-items: center; gap: 10px; }
+        .menu li:hover, .menu li.active { background: #2c3d63; border-left: 4px solid var(--accent); }
+        
+        .mainContent { flex-grow: 1; padding: 30px; max-width: 100%; overflow-x: hidden; }
+        .page { background: transparent; }
+        .hidden { display: none !important; }
+        
+        .pageHeader { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; border-bottom: 2px solid #e5e7eb; padding-bottom: 10px; flex-wrap: wrap; gap: 10px; }
+        .pageHeader h2 { margin: 0; color: var(--primary); font-size: 22px; }
+        
+        /* UI Components & Responsive Grids */
+        .formCard { background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); margin-bottom: 25px; }
+        .row { display: flex; gap: 20px; flex-wrap: wrap; }
+        .formGroup { flex: 1; min-width: 200px; display: flex; flex-direction: column; margin-bottom: 15px; }
+        .formGroup label { font-size: 12px; font-weight: 600; color: #4b5563; margin-bottom: 6px; text-transform: uppercase; }
+        .formGroup input, .formGroup select { padding: 10px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 14px; width: 100%; }
+        
+        .buttonArea { display: flex; gap: 10px; margin-top: 15px; flex-wrap: wrap; }
+        button { padding: 10px 20px; border: none; border-radius: 6px; cursor: pointer; font-weight: 600; font-size: 14px; transition: 0.2s; color: white; background: var(--primary); display: inline-flex; align-items: center; gap: 6px; }
+        button:hover { opacity: 0.9; }
+        
+        .tableCard { background: white; padding: 15px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); overflow-x: auto; margin-top: 15px; -webkit-overflow-scrolling: touch; }
+        table { width: 100%; border-collapse: collapse; text-align: left; font-size: 14px; min-width: 600px; }
+        th, td { padding: 12px 15px; border-bottom: 1px solid #e5e7eb; }
+        th { background: #f8fafc; color: var(--primary); font-weight: 700; }
+        
+        /* Dashboard Metric Cards */
+        .dashboardGrid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 20px; }
+        .card { padding: 20px; border-radius: 12px; color: white; box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
+        .card-blue { background: #2563eb; } .card-orange { background: #ea580c; } .card-green { background: #16a34a; } .card-purple { background: #7c3aed; }
+        .card .value { font-size: 24px; font-weight: 800; margin: 5px 0; }
+        
+        /* Helper Elements */
+        .btn-edit { background: #eab308; padding: 5px 10px; font-size: 12px; }
+        .btn-delete { background: #ef4444; padding: 5px 10px; font-size: 12px; }
+        .btn-excel { background: #16a34a; }
+        .btn-sync { background: #2563eb; }
+        
+        .completed-day { opacity: 0.55; filter: grayscale(50%); text-decoration: line-through; background: #f1f5f9 !important; border-left: 5px solid #64748b !important; }
+        .footer-credit { text-align: center; padding: 20px; font-size: 12px; color: #94a3b8; border-top: 1px solid #e5e7eb; margin-top: 40px; }
+        
+        /* Category Analytics Group Header Style */
+        .category-row-header { background: #e2e8f0 !important; font-weight: bold; color: var(--primary); text-transform: uppercase; font-size: 12px; letter-spacing: 0.5px; }
+
+        /* 📱 MEDIA QUERIES FOR MOBILE OPTIMIZATION */
+        @media (max-width: 768px) {
+            .wrapper { flex-direction: column; }
+            .sidebar { width: 100%; border-bottom: 3px solid var(--accent); padding: 15px; }
+            .sidebar h2 { margin-top: 0; font-size: 16px; }
+            .dev-badge { margin-bottom: 10px; padding: 4px; }
+            .menu { display: flex; flex-wrap: wrap; gap: 5px; justify-content: center; }
+            .menu li { margin-bottom: 0; padding: 8px 12px; font-size: 12px; }
+            .mainContent { padding: 15px; }
+            .pageHeader h2 { font-size: 18px; }
+            .formCard { padding: 15px; }
+            .row { gap: 10px; }
+            .formGroup { min-width: 100%; margin-bottom: 10px; }
+            .card .value { font-size: 20px; }
+            button { width: 100%; justify-content: center; padding: 12px; }
+            .buttonArea { width: 100%; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="wrapper">
+    <div class="sidebar">
+        <div>
+            <h2>SBFP Matrix Engine</h2>
+            <div class="dev-badge">
+                🛠️ Systems Developer:<br>
+                <strong>ROMULO J. JACINTO JR.</strong>
+            </div>
+            <ul class="menu">
+                <li class="active" data-page="dashboard">📊 Dashboard Matrix</li>
+                <li data-page="price-registry">🏷️ Item Price Registry</li>
+                <li data-page="menusetup">🍱 20-Day Cycle Menu</li>
+                <li data-page="generator">⚙️ Calendar Generator</li>
+                <li data-page="summary">📋 Procurement Analytics</li>
+            </ul>
+        </div>
+        <div style="font-size: 10px; text-align: center; color: #64748b; margin-top: 10px;">v16.0 Pro Mobile-Ready</div>
+    </div>
+
+    <div class="mainContent">
+
+        <div id="dashboard" class="page">
+            <div class="pageHeader">
+                <h2>System Overview & Budget Matrix</h2>
+                <div class="buttonArea" style="margin: 0;">
+                    <button class="btn-excel" onclick="exportFullDatabaseEngine()">📥 Backup Data (.json)</button>
+                    <button class="btn-sync" onclick="document.getElementById('importFile').click()">📤 Upload to Phone</button>
+                    <input type="file" id="importFile" accept=".json" style="display:none;" onchange="importFullDatabaseEngine(this)">
+                </div>
+            </div>
+            
+            <div class="formCard" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 25px;">
+                <div class="formGroup">
+                    <label>Total No. of Learners</label>
+                    <input type="number" id="numLearners" value="100">
+                </div>
+                <div class="formGroup">
+                    <label>Cost Per Learner (Rate)</label>
+                    <input type="number" id="costPerLearner" value="15.00" step="0.01">
+                </div>
+                <div class="formGroup">
+                    <label>Budget Contract Period (Days)</label>
+                    <input type="number" id="budgetDays" value="90">
+                </div>
+                <div class="formGroup">
+                    <label>Actual Extrapolation (Days)</label>
+                    <input type="number" id="generateDays" value="75">
+                </div>
+            </div>
+
+            <div class="dashboardGrid">
+                <div class="card card-blue">
+                    <h3>Total Contract Funding Budget</h3>
+                    <div class="value" id="cardBudget">₱0.00</div>
+                    <small>Based on Budget Contract Period</small>
+                </div>
+                <div class="card card-orange">
+                    <h3>Actual Cooked Simulated Cost</h3>
+                    <div class="value" id="cardCost">₱0.00</div>
+                    <small>Based on Actual Extrapolation Days</small>
+                </div>
+                <div class="card card-green">
+                    <h3>Net Variance Balance</h3>
+                    <div class="value" id="cardRemaining">₱0.00</div>
+                    <small>Remaining Contract Money</small>
+                </div>
+                <div class="card card-purple">
+                    <h3>Core Menu Configuration</h3>
+                    <div class="value" id="cardDays">0 / 20</div>
+                    <small>Unique Active Days Encoded</small>
+                </div>
+            </div>
+
+            <h3 style="margin: 30px 0 15px 0; color: #1f2a44; font-size: 16px;">📊 CORE MENU BASELINE BUDGET TARGETS</h3>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px;">
+                <div style="background: white; padding: 20px; border-radius: 10px; border-left: 5px solid #2980b9; box-shadow: 0 2px 5px rgba(0,0,0,0.05);">
+                    <span style="font-size: 12px; color: #666; font-weight: 600; text-transform: uppercase;">Budget For Single Day (1 Day)</span>
+                    <div id="dashBudget1Day" style="font-size: 24px; font-weight: 800; color: #2980b9; margin-top: 5px;">₱0.00</div>
+                </div>
+                <div style="background: white; padding: 20px; border-radius: 10px; border-left: 5px solid #e67e22; box-shadow: 0 2px 5px rgba(0,0,0,0.05);">
+                    <span style="font-size: 12px; color: #666; font-weight: 600; text-transform: uppercase;">Budget For Weekly Bracket (5 Days)</span>
+                    <div id="dashBudget5Days" style="font-size: 24px; font-weight: 800; color: #e67e22; margin-top: 5px;">₱0.00</div>
+                </div>
+                <div style="background: white; padding: 20px; border-radius: 10px; border-left: 5px solid #2ecc71; box-shadow: 0 2px 5px rgba(0,0,0,0.05);">
+                    <span style="font-size: 12px; color: #666; font-weight: 600; text-transform: uppercase;">Budget For Core Loop (20 Days)</span>
+                    <div id="dashBudget20Days" style="font-size: 24px; font-weight: 800; color: #2ecc71; margin-top: 5px;">₱0.00</div>
+                </div>
+            </div>
+        </div>
+
+        <div id="price-registry" class="page hidden">
+            <div class="pageHeader">
+                <h2>Item Procurement Price Registry</h2>
+            </div>
+            <div class="formCard">
+                <div class="row">
+                    <div class="formGroup">
+                        <label>Category Group</label>
+                        <select id="category">
+                            <option value="">Select Category</option>
+                            <option value="Vegetables">Vegetables</option>
+                            <option value="Meat/Poultry">Meat/Poultry</option>
+                            <option value="Groceries">Groceries (Dry Loops)</option>
+                        </select>
+                    </div>
+                    <div class="formGroup">
+                        <label>Item Description / Name</label>
+                        <input type="text" id="itemName" placeholder="e.g. Sayote, Pork Lean Meat">
+                    </div>
+                    <div class="formGroup">
+                        <label>Unit of Measure</label>
+                        <input type="text" id="unit" value="kg">
+                    </div>
+                    <div class="formGroup">
+                        <label>Approved Unit Price</label>
+                        <input type="number" id="price" placeholder="0.00" step="0.01">
+                    </div>
+                </div>
+                <div class="buttonArea">
+                    <button id="addItemBtn">➕ Save Item to Registry</button>
+                    <button id="updateItemBtn" style="display:none; background:#eab308;">🔄 Update Item Profile</button>
+                </div>
+            </div>
+            <div class="tableCard">
+                <input type="text" id="searchItem" placeholder="🔍 Search item registry..." style="width:100%; padding:10px; margin-bottom:15px; border:1px solid #ddd; border-radius:6px;">
+                <table>
+                    <thead>
+                        <tr><th>#</th><th>Category</th><th>Item Description</th><th>Unit</th><th>Unit Price</th><th>Actions</th></tr>
+                    </thead>
+                    <tbody id="priceBody"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <div id="menusetup" class="page hidden">
+            <div class="pageHeader">
+                <h2>20-Day Cycle Menu Allocation</h2>
+                <div class="buttonArea" style="margin:0;">
+                    <button id="btnShowCurrentDay" style="background:#2563eb; font-size:12px;">🎯 Current Day Only</button>
+                    <button id="btnShowAllDays" style="background:#64748b; font-size:12px;">👁️ View All 20 Days</button>
+                </div>
+            </div>
+            <div class="formCard">
+                <div class="row">
+                    <div class="formGroup" style="flex: 0.4; min-width:80px;">
+                        <label>Day (1-20)</label>
+                        <input type="number" id="menuDay" min="1" max="20" value="1">
+                    </div>
+                    <div class="formGroup" style="flex: 1.2; min-width:180px;">
+                        <label>Menu / Dish Name for this specific Day</label>
+                        <input type="text" id="dishName" placeholder="e.g. Sinigang na Baboy, Tinola, Sopas">
+                    </div>
+                    <div class="formGroup">
+                        <label>Select Commodity Item</label>
+                        <select id="menuItem"></select>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="formGroup">
+                        <label>Quantity</label>
+                        <input type="number" id="menuQty" min="0.01" step="0.01" placeholder="0.00">
+                    </div>
+                    <div class="formGroup">
+                        <label>Unit</label>
+                        <input type="text" id="menuUnit" readonly style="background:#f3f4f6; color:#6b7280;">
+                    </div>
+                    <div class="formGroup">
+                        <label>Base Price</label>
+                        <input type="text" id="menuPrice" readonly style="background:#f3f4f6; color:#6b7280;">
+                    </div>
+                    <div class="formGroup">
+                        <label>Calculated Total</label>
+                        <input type="text" id="menuTotal" readonly style="background: #fff !important; color: #b91c1c !important; font-weight: 800 !important; border: 2px solid #cbd5e1 !important; font-size: 18px !important; text-align: right !important;">
+                    </div>
+                </div>
+                <div class="buttonArea">
+                    <button id="addMenuBtn">➕ Add to Core Menu</button>
+                    <button id="updateMenuBtn" style="display:none; background:#eab308;">🔄 Update Core Menu</button>
+                </div>
+            </div>
+
+            <div style="background: white; padding: 20px; border-radius: 10px; box-shadow: 0 2px 6px rgba(0,0,0,0.05); margin-top: 20px;">
+                <h4 style="color: #1f2a44; font-size: 13px; margin: 0 0 15px 0; text-transform: uppercase;">⚠️ Live Allocation Monitor (<span id="txtFocusMode" style="color:#2563eb; font-weight:bold;">Current Day Focus</span>)</h4>
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px;">
+                    <div style="background: #f4f6f7; padding: 12px; border-radius: 8px; border-top: 4px solid #2980b9;">
+                        <span style="font-size: 11px; color: #555; font-weight: 600;">DAY <span id="lblCurrentDay">1</span>: <span id="lblCurrentDish" style="color:#d97706;">No Dish Assigned</span></span>
+                        <div style="font-size: 11px; color:#7f8c8d; margin-top:5px;">Target: <span id="setupBudget1Day">₱0.00</span></div>
+                        <div style="font-size: 11px; color:#7f8c8d;">Actual: <span id="menuTotalCurrentDay" style="font-weight:700; color:#2980b9;">₱0.00</span></div>
+                        <small id="alertDay" style="display:block; margin-top:5px; font-weight:600;"></small>
+                    </div>
+                    <div style="background: #f4f6f7; padding: 12px; border-radius: 8px; border-top: 4px solid #e67e22;">
+                        <span style="font-size: 11px; color: #555; font-weight: 600;"><span id="lblCurrentRange">Days 1 - 5</span> Bracket</span>
+                        <div style="font-size: 11px; color:#7f8c8d; margin-top:5px;">Target: <span id="setupBudget5Days">₱0.00</span></div>
+                        <div style="font-size: 11px; color:#7f8c8d;">Actual: <span id="menuTotalRangeDays" style="font-weight:700; color:#e67e22;">₱0.00</span></div>
+                        <small id="alertRangeDays" style="display:block; margin-top:5px; font-weight:600;"></small>
+                    </div>
+                    <div style="background: #f4f6f7; padding: 12px; border-radius: 8px; border-top: 4px solid #2ecc71;">
+                        <span style="font-size: 11px; color: #555; font-weight: 600;">Buong 20-Day Cycle Loop</span>
+                        <div style="font-size: 11px; color:#7f8c8d; margin-top:5px;">Target: <span id="setupBudget20Days">₱0.00</span></div>
+                        <div style="font-size: 11px; color:#7f8c8d;">Actual: <span id="menuTotal20Days" style="font-weight:700; color:#2ecc71;">₱0.00</span></div>
+                        <small id="alert20Days" style="display:block; margin-top:5px; font-weight:600;"></small>
+                    </div>
+                </div>
+            </div>
+
+            <div class="tableCard">
+                <table id="menuTable">
+                    <thead>
+                        <tr>
+                            <th>Cycle Day</th>
+                            <th>Recipe / Dish Name</th>
+                            <th>Category</th>
+                            <th>Item Name</th>
+                            <th>Qty Matrix</th>
+                            <th>Unit</th>
+                            <th>Price</th>
+                            <th>Subtotal</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="menuBody"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <div id="generator" class="page hidden">
+            <div class="pageHeader">
+                <h2>SBFP Calendar Extrapolation & Progress Checklist</h2>
+            </div>
+            <div class="formCard" style="display: flex; align-items: center; gap: 20px; flex-wrap:wrap; border-left: 4px solid #10b981;">
+                <div class="formGroup" style="min-width:150px;">
+                    <label style="color: #10b981; font-weight: bold;">Feeding Days Span:</label>
+                    <input type="number" id="genDaysInput" value="75" min="1" style="text-align: center; font-weight:bold;">
+                </div>
+                <button id="generateBtn" style="margin-top: 10px; background: #10b981; width:auto;">⚙️ Run Engine & Update Checklist</button>
+            </div>
+
+            <div id="generatedContainer"></div>
+        </div>
+
+        <div id="summary" class="page hidden">
+            <div class="pageHeader">
+                <h2>Consolidated Allocation Analytics</h2>
+                <button class="btn-excel" onclick="exportLogisticsToExcel()">📥 Export Logistics to CSV/Excel</button>
+            </div>
+            
+            <div style="background: white; padding: 20px; border-radius: 10px; margin-bottom: 25px; border: 1px solid #ddd; line-height: 1.6; font-size:14px;">
+                <strong>Allocated Budget Period:</strong> <span id="summaryBudgetDays" style="font-weight:bold; color:#16a34a;">90</span> Days | 
+                <strong>Actual Feeding Span:</strong> <span id="summaryDays" style="font-weight:bold; color:#10b981;">75</span> Days <br>
+                <strong>Grand Total Simulated Cost:</strong> <span id="summaryGrandTotal" style="color:#e67e22; font-weight:bold;">₱0.00</span> |
+                <strong>Funding Baseline Budget:</strong> <span id="summaryBudget" style="color:#2ecc71; font-weight:bold;">₱0.00</span> |
+                <strong>Net Variance Balance:</strong> <span id="summaryRemaining" style="font-weight:bold;">₱0.00</span>
+            </div>
+
+            <h3 style="margin: 20px 0 10px 0; font-size: 16px;">🔄 Group Category Breakdown</h3>
+            <div class="tableCard">
+                <table>
+                    <thead><tr><th>Category Type</th><th>Total Volumetric Qty</th><th>Total Financial Cost</th></tr></thead>
+                    <tbody id="categorySummary"></tbody>
+                </table>
+            </div>
+
+            <h3 style="margin: 30px 0 10px 0; font-size: 16px;">📅 5-Day Operational Bracket Analysis</h3>
+            <div class="tableCard">
+                <table>
+                    <thead><tr><th>Operational Interval</th><th>Meat/Poultry</th><th>Vegetables</th><th>Groceries</th><th>Aggregate Cost</th></tr></thead>
+                    <tbody id="fiveDaySummary"></tbody>
+                </table>
+            </div>
+
+            <h2 style="color: #2c3e50; font-size: 18px; margin-top: 40px;">📋 GRAND PROCUREMENT SUPPLIER CHECKLIST (Whole Contract Span)</h2>
+            <div style="font-size:12px; color:#555; margin-bottom:10px;">💡 Naka-grupo nang maayos ayon sa Category (Meat/Poultry, Vegetables, Groceries) para hindi sabog ang listahan mo.</div>
+            <div class="tableCard">
+                <table id="fullOrderTable">
+                    <thead>
+                        <tr style="background:#f2faf4;">
+                            <th>Category Type</th>
+                            <th>Item Name</th>
+                            <th>Total Contract Qty</th>
+                            <th>Unit</th>
+                            <th>Unit Price</th>
+                            <th>Grand Payable</th>
+                        </tr>
+                    </thead>
+                    <tbody id="fullOrderBody"></tbody>
+                </table>
+            </div>
+
+            <h2 style="color: #2c3e50; font-size: 18px; margin-top: 40px;">🚚 DYNAMIC OPERATION manifests</h2>
+            
+            <div style="border-left: 4px solid #e74c3c; padding: 10px; background: #fffcfc; display: flex; justify-content: space-between; align-items: center; margin-top: 20px; flex-wrap:wrap; gap:10px;">
+                <div><strong>📌 A. Weekly Order Manifest (Perishables Only)</strong></div>
+                <select id="selectWeeklyTarget" style="padding:5px; font-weight:bold;"></select>
+            </div>
+            <div class="tableCard">
+                <table>
+                    <thead><tr style="background:#fdf2f2;"><th>Category</th><th>Item Name</th><th>Weekly Target Qty</th><th>Unit</th><th>Price</th><th>Cost</th></tr></thead>
+                    <tbody id="weeklyOrderBody"></tbody>
+                </table>
+            </div>
+
+            <div style="border-left: 4px solid #8e44ad; padding: 10px; background: #faf8fc; display: flex; justify-content: space-between; align-items: center; margin-top: 30px; flex-wrap:wrap; gap:10px;">
+                <div><strong>📌 B. Groceries Loop Manifest (Non-Perishables - Every 20 Days)</strong></div>
+                <select id="selectMonthlyTarget" style="padding:5px; font-weight:bold;"></select>
+            </div>
+            <div class="tableCard">
+                <table>
+                    <thead><tr style="background:#fbf7ff;"><th>Category</th><th>Item Name</th><th>Selected 20-Day Block Qty</th><th>Unit</th><th>Price</th><th>Cost</th></tr></thead>
+                    <tbody id="monthlyOrderBody"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="footer-credit">
+            System Design & Architecture by <strong>Romulo J. Jacinto Jr.</strong> | SDO Isabela Web Utility Engine &copy; 2026
+        </div>
+
+    </div>
+</div>
+<script>
+// LOCALSTORAGE DATABASE ENGINES
+let priceList = JSON.parse(localStorage.getItem("priceList")) || [];
+let menuList = JSON.parse(localStorage.getItem("menuList")) || [];
+let dishNames = JSON.parse(localStorage.getItem("dishNames")) || {}; 
+let completedDays = JSON.parse(localStorage.getItem("completedDays")) || []; 
+
+let editPriceIndex = null;
+let editMenuIndex = null;
+let viewAllCoreMenu = false; 
+
+// SIDEBAR NAV CONTROLLER & MOBILE AUTO-COLLAPSE
+document.querySelectorAll(".menu li").forEach(item => {
+    item.addEventListener("click", function () {
+        document.querySelectorAll(".menu li").forEach(li => li.classList.remove("active"));
+        this.classList.add("active");
+        let page = this.getAttribute("data-page");
+        document.querySelectorAll(".page").forEach(p => p.classList.add("hidden"));
+        
+        const targetPage = document.getElementById(page);
+        if (targetPage) targetPage.classList.remove("hidden");
+
+        rebuildAdaptiveSelectors();
+        refreshAll();
+        updateDashboardMetrics();
+    });
+});
+
+// 💾 CROSS-DEVICE SYNC ENGINE (JSON LAPTOP-TO-PHONE BRIDGE)
+window.exportFullDatabaseEngine = function() {
+    let backupData = {
+        priceList: priceList,
+        menuList: menuList,
+        dishNames: dishNames,
+        completedDays: completedDays,
+        numLearners: document.getElementById("numLearners").value,
+        costPerLearner: document.getElementById("costPerLearner").value,
+        budgetDays: document.getElementById("budgetDays").value,
+        generateDays: document.getElementById("genDaysInput").value
+    };
+    
+    let dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(backupData));
+    let downloadAnchor = document.createElement('a');
+    downloadAnchor.setAttribute("href", dataStr);
+    downloadAnchor.setAttribute("download", `SBFP_DATABASE_BACKUP_2026.json`);
+    document.body.appendChild(downloadAnchor);
+    downloadAnchor.click();
+    downloadAnchor.remove();
+};
+
+window.importFullDatabaseEngine = function(inputElement) {
+    let file = inputElement.files[0];
+    if (!file) return;
+    
+    let reader = new FileReader();
+    reader.onload = function(e) {
+        try {
+            let importedData = JSON.parse(e.target.result);
+            
+            // Re-populate state engines
+            if (importedData.priceList) priceList = importedData.priceList;
+            if (importedData.menuList) menuList = importedData.menuList;
+            if (importedData.dishNames) dishNames = importedData.dishNames;
+            if (importedData.completedDays) completedDays = importedData.completedDays;
+            
+            // Save to LocalStorage immediately
+            saveData();
+            localStorage.setItem("completedDays", JSON.stringify(completedDays));
+            
+            // Re-populate core form inputs
+            if (importedData.numLearners) document.getElementById("numLearners").value = importedData.numLearners;
+            if (importedData.costPerLearner) document.getElementById("costPerLearner").value = importedData.costPerLearner;
+            if (importedData.budgetDays) document.getElementById("budgetDays").value = importedData.budgetDays;
+            if (importedData.generateDays) {
+                document.getElementById("genDaysInput").value = importedData.generateDays;
+                document.getElementById("generateDays").value = importedData.generateDays;
+            }
+            
+            saveParameters();
+            alert("✅ SBFP Matrix Database Successfully Uploaded to this device! Re-loading elements...");
+            location.reload();
+            
+        } catch (error) {
+            alert("❌ Naku paps, corrupt or hindi valid na SBFP JSON file ang na-upload mo.");
+        }
+    };
+    reader.readAsText(file);
+};
+
+// PRICE REGISTRY CONTROLS
+document.getElementById("addItemBtn").onclick = function () {
+    let category = document.getElementById("category").value;
+    let item = document.getElementById("itemName").value.trim();
+    let unit = document.getElementById("unit").value;
+    let price = parseFloat(document.getElementById("price").value);
+    if (!category || !item || isNaN(price)) { alert("Pakikumpleto ang Item Profile!"); return; }
+    priceList.push({ category, item, unit, price });
+    clearPriceForm(); renderPriceTable(); updateMenuDropdown(); saveData(); updateDashboardMetrics();
+};
+
+function renderPriceTable() {
+    let tbody = document.getElementById("priceBody"); if (!tbody) return; tbody.innerHTML = "";
+    priceList.forEach((p, index) => {
+        tbody.innerHTML += `<tr><td>${index + 1}</td><td>${p.category}</td><td><strong>${p.item}</strong></td><td>${p.unit}</td><td>₱${p.price.toFixed(2)}</td><td><button class="btn-edit" onclick="editPrice(${index})">✏</button> <button class="btn-delete" onclick="deletePrice(${index})">🗑</button></td></tr>`;
+    });
+}
+
+window.editPrice = function(index) {
+    let p = priceList[index]; document.getElementById("category").value = p.category; document.getElementById("itemName").value = p.item; document.getElementById("unit").value = p.unit; document.getElementById("price").value = p.price;
+    editPriceIndex = index; document.getElementById("addItemBtn").style.display = "none"; document.getElementById("updateItemBtn").style.display = "inline-block";
+};
+
+document.getElementById("updateItemBtn").onclick = function () {
+    if (editPriceIndex === null) return;
+    priceList[editPriceIndex] = { category: document.getElementById("category").value, item: document.getElementById("itemName").value.trim(), unit: document.getElementById("unit").value, price: parseFloat(document.getElementById("price").value) };
+    editPriceIndex = null; document.getElementById("addItemBtn").style.display = "inline-block"; document.getElementById("updateItemBtn").style.display = "none";
+    clearPriceForm(); renderPriceTable(); updateMenuDropdown(); saveData(); updateDashboardMetrics();
+};
+
+window.deletePrice = function(index) { if (confirm("Burahin ito sa Registry?")) { priceList.splice(index, 1); renderPriceTable(); updateMenuDropdown(); saveData(); updateDashboardMetrics(); } };
+function clearPriceForm() { document.getElementById("category").value = ""; document.getElementById("itemName").value = ""; document.getElementById("price").value = ""; }
+
+document.getElementById("searchItem").addEventListener("input", function () {
+    let val = this.value.toLowerCase();
+    document.querySelectorAll("#priceBody tr").forEach(row => { row.style.display = row.innerText.toLowerCase().includes(val) ? "" : "none"; });
+});
+
+function updateMenuDropdown() {
+    let select = document.getElementById("menuItem"); if (!select) return; select.innerHTML = "<option value=''>Select Item</option>";
+    priceList.forEach(p => { let opt = document.createElement("option"); opt.value = p.item; opt.textContent = p.item; select.appendChild(opt); });
+}
+
+document.getElementById("menuItem").addEventListener("change", function () {
+    let item = priceList.find(p => p.item === this.value);
+    if (item) {
+        document.getElementById("menuUnit").value = item.unit; document.getElementById("menuPrice").value = item.price;
+        let qty = parseFloat(document.getElementById("menuQty").value) || 0;
+        document.getElementById("menuTotal").value = (qty * item.price).toFixed(2);
+    }
+});
+
+document.getElementById("menuQty").addEventListener("input", function () {
+    let price = parseFloat(document.getElementById("menuPrice").value);
+    document.getElementById("menuTotal").value = (!isNaN(price) && !isNaN(this.value)) ? (this.value * price).toFixed(2) : "";
+});
+
+// DAY FOCUS MASKING & RECIPE CONTROLLER
+document.getElementById("btnShowCurrentDay").onclick = function() { 
+    viewAllCoreMenu = false; document.getElementById("txtFocusMode").innerText = "Current Day Focus"; renderMenuTable(); 
+};
+
+document.getElementById("btnShowAllDays").onclick = function() { 
+    viewAllCoreMenu = true; document.getElementById("txtFocusMode").innerText = "All 20 Days View Mode"; renderMenuTable(); 
+};
+
+document.getElementById("menuDay").addEventListener("input", function() {
+    let activeDay = this.value;
+    document.getElementById("dishName").value = dishNames[activeDay] || "";
+    calculateMenuSetupTotals(); renderMenuTable();
+});
+
+document.getElementById("dishName").addEventListener("input", function() {
+    let currentDay = document.getElementById("menuDay").value;
+    dishNames[currentDay] = this.value.trim(); saveData(); calculateMenuSetupTotals(); renderMenuTable();
+});
+
+// CORE ALLOCATION ENGINE
+document.getElementById("addMenuBtn").onclick = function () {
+    let day = document.getElementById("menuDay").value;
+    let item = document.getElementById("menuItem").value;
+    let qty = parseFloat(document.getElementById("menuQty").value);
+    let price = parseFloat(document.getElementById("menuPrice").value);
+    if (!day || !item || isNaN(qty)) { alert("Paki-pili ang Item at Quantity!"); return; }
+
+    menuList.push({ day, category: getCategory(item), item, qty, unit: document.getElementById("menuUnit").value, price, total: qty * price });
+    clearMenuForm(); renderMenuTable(); saveData(); updateDashboardMetrics(); calculateMenuSetupTotals();
+};
+
+function getCategory(itemName) { let item = priceList.find(p => p.item === itemName); return item ? item.category : ""; }
+
+function renderMenuTable() {
+    let tbody = document.getElementById("menuBody"); if (!tbody) return; tbody.innerHTML = "";
+    menuList.sort((a, b) => parseInt(a.day) - parseInt(b.day));
+    let activeSetupDay = document.getElementById("menuDay").value;
+
+    menuList.forEach((m, index) => {
+        if (!viewAllCoreMenu && m.day !== activeSetupDay) return;
+        let dayDish = dishNames[m.day] || `<span style="color:#aaa; font-style:italic;">No Dish Assigned</span>`;
+        tbody.innerHTML += `<tr><td><strong>Day ${m.day}</strong></td><td><strong style="color:#d97706;">${dayDish}</strong></td><td>${m.category}</td><td>${m.item}</td><td>${m.qty}</td><td>${m.unit}</td><td>₱${m.price.toFixed(2)}</td><td><strong>₱${m.total.toFixed(2)}</strong></td><td><button class="btn-edit" onclick="editMenu(${index})">✏</button> <button class="btn-delete" onclick="deleteMenu(${index})">🗑</button></td></tr>`;
+    });
+}
+
+window.editMenu = function(index) {
+    let m = menuList[index]; document.getElementById("menuDay").value = m.day; document.getElementById("menuItem").value = m.item;
+    document.getElementById("menuQty").value = m.qty; document.getElementById("menuUnit").value = m.unit; document.getElementById("menuPrice").value = m.price;
+    document.getElementById("menuTotal").value = m.total.toFixed(2); document.getElementById("dishName").value = dishNames[m.day] || "";
+    editMenuIndex = index; document.getElementById("addMenuBtn").style.display = "none"; document.getElementById("updateMenuBtn").style.display = "inline-block";
+};
+
+document.getElementById("updateMenuBtn").onclick = function () {
+    if (editMenuIndex === null) return;
+    let day = document.getElementById("menuDay").value; let item = document.getElementById("menuItem").value; let qty = parseFloat(document.getElementById("menuQty").value);
+    menuList[editMenuIndex] = { day, category: getCategory(item), item, qty, unit: document.getElementById("menuUnit").value, price: parseFloat(document.getElementById("menuPrice").value), total: qty * parseFloat(document.getElementById("menuPrice").value) };
+    editMenuIndex = null; document.getElementById("addMenuBtn").style.display = "inline-block"; document.getElementById("updateMenuBtn").style.display = "none";
+    clearMenuForm(); renderMenuTable(); saveData(); updateDashboardMetrics(); calculateMenuSetupTotals();
+};
+
+window.deleteMenu = function(index) { if (confirm("Alisin ito sa loop?")) { menuList.splice(index, 1); renderMenuTable(); saveData(); updateDashboardMetrics(); calculateMenuSetupTotals(); } };
+function clearMenuForm() { document.getElementById("menuItem").value = ""; document.getElementById("menuQty").value = ""; document.getElementById("menuTotal").value = ""; }
+
+function calculateMenuSetupTotals() {
+    let targetDay = parseInt(document.getElementById("menuDay").value) || 1;
+    if(document.getElementById("lblCurrentDay")) document.getElementById("lblCurrentDay").innerText = targetDay;
+    if(document.getElementById("lblCurrentDish")) document.getElementById("lblCurrentDish").innerText = dishNames[targetDay] || "No Dish Assigned";
+
+    let learners = parseInt(document.getElementById("numLearners").value) || 0;
+    let costPerLearner = parseFloat(document.getElementById("costPerLearner").value) || 0;
+
+    let startRange = 1, endRange = 5;
+    if (targetDay >= 6 && targetDay <= 10) { startRange = 6; endRange = 10; }
+    else if (targetDay >= 11 && targetDay <= 15) { startRange = 11; endRange = 15; }
+    else if (targetDay >= 16 && targetDay <= 20) { startRange = 16; endRange = 20; }
+
+    if(document.getElementById("lblCurrentRange")) document.getElementById("lblCurrentRange").innerText = `Days ${startRange} - ${endRange}`;
+
+    let maxBudget1Day = costPerLearner * learners * 1;
+    let maxBudget5Days = costPerLearner * learners * 5; 
+    let maxBudget20Days = costPerLearner * learners * 20;
+
+    if(document.getElementById("setupBudget1Day")) document.getElementById("setupBudget1Day").innerText = "₱" + maxBudget1Day.toFixed(2);
+    if(document.getElementById("setupBudget5Days")) document.getElementById("setupBudget5Days").innerText = "₱" + maxBudget5Days.toFixed(2);
+    if(document.getElementById("setupBudget20Days")) document.getElementById("setupBudget20Days").innerText = "₱" + maxBudget20Days.toFixed(2);
+
+    let totalCurrentDay = 0, totalRangeDays = 0, total20Days = 0;
+    menuList.forEach(m => {
+        let d = parseInt(m.day);
+        if (d === targetDay) totalCurrentDay += m.total;
+        if (d >= startRange && d <= endRange) totalRangeDays += m.total;
+        if (d >= 1 && d <= 20) total20Days += m.total;
+    });
+
+    if(document.getElementById("menuTotalCurrentDay")) document.getElementById("menuTotalCurrentDay").innerText = "₱" + totalCurrentDay.toFixed(2);
+    if(document.getElementById("menuTotalRangeDays")) document.getElementById("menuTotalRangeDays").innerText = "₱" + totalRangeDays.toFixed(2);
+    if(document.getElementById("menuTotal20Days")) document.getElementById("menuTotal20Days").innerText = "₱" + total20Days.toFixed(2);
+
+    let lblDay = document.getElementById("alertDay"), lblRange = document.getElementById("alertRangeDays"), lbl20Day = document.getElementById("alert20Days");
+    if(lblDay) { lblDay.innerText = totalCurrentDay > maxBudget1Day ? `🚨 OVER! (+₱${(totalCurrentDay - maxBudget1Day).toFixed(2)})` : "✅ Safe"; lblDay.style.color = totalCurrentDay > maxBudget1Day ? "#ef4444" : "#10b981"; }
+    if(lblRange) { lblRange.innerText = totalRangeDays > maxBudget5Days ? `🚨 OVER! (+₱${(totalRangeDays - maxBudget5Days).toFixed(2)})` : "✅ Safe"; lblRange.style.color = totalRangeDays > maxBudget5Days ? "#ef4444" : "#10b981"; }
+    if(lbl20Day) { lbl20Day.innerText = total20Days > maxBudget20Days ? `🚨 OVER! (+₱${(total20Days - maxBudget20Days).toFixed(2)})` : "✅ Safe Loop"; lbl20Day.style.color = total20Days > maxBudget20Days ? "#ef4444" : "#10b981"; }
+}
+
+// CALENDAR ENGINE EXTRA-DISPATCH WITH PERSISTENT STATUS CHECKER
+document.getElementById("generateBtn").onclick = function () { runExtrapolationEngine(); };
+
+function runExtrapolationEngine() {
+    let days = parseInt(document.getElementById("genDaysInput").value) || 0;
+    if (days <= 0 || menuList.length === 0) { alert("Gumawa muna ng Menu at lagyan ng Generation Days!"); return; }
+
+    let container = document.getElementById("generatedContainer"); if (!container) return; container.innerHTML = "";
+    let grandTotal = 0;
+
+    for (let day = 1; day <= days; day++) {
+        let cycleDay = ((day - 1) % 20) + 1;
+        let items = menuList.filter(m => parseInt(m.day) === cycleDay);
+        let dayDish = dishNames[cycleDay] || "Unassigned Recipe / Dish";
+        
+        let isChecked = completedDays.includes(day) ? "checked" : "";
+        let completedClass = completedDays.includes(day) ? "completed-day" : "";
+        let dayTotal = 0; items.forEach(m => dayTotal += m.total); grandTotal += dayTotal;
+
+        let html = `<div id="divActualDayCard-${day}" class="tableCard ${completedClass}" style="margin-bottom: 20px; border-left: 5px solid #10b981;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; flex-wrap:wrap; gap:10px;">
+                <h3 style="color:#1f2a44; font-size:14px; margin:0;">
+                    📅 ACTUAL FEEDING DAY ${day} - <span style="color:#d97706; font-weight:bold;">${dayDish}</span> 
+                    <small style="color:#777; font-size:11px;">(Cycle: Day ${cycleDay})</small>
+                </h3>
+                <label style="font-weight:bold; font-size:12px; cursor:pointer; background:#e2e8f0; padding:6px 12px; border-radius:6px; display:inline-flex; align-items:center; gap:6px;">
+                    <input type="checkbox" ${isChecked} onchange="toggleDayCompletion(${day}, this)"> 📋 Mark Completed
+                </label>
+            </div>
+            <table>
+                <thead><tr><th>Item Description</th><th>Qty Matrix</th><th>Unit</th><th>Price</th><th>Subtotal</th></tr></thead>
+                <tbody>`;
+
+        if (items.length > 0) {
+            items.forEach(m => { html += `<tr><td><strong>${m.item}</strong></td><td>${m.qty}</td><td>${m.unit}</td><td>₱${m.price.toFixed(2)}</td><td>₱${m.total.toFixed(2)}</td></tr>`; });
+        } else {
+            html += `<tr><td colspan="5" style="text-align:center; color:#999;">No allocation mapping set for this loop.</td></tr>`;
+        }
+        html += `</tbody></table><h4 style="margin-top:12px; text-align:right; color:#333; font-size:13px; margin-bottom:0;">DAY ${day} COST: <span style="color:#ea580c; font-weight:bold;">₱${dayTotal.toFixed(2)}</span></h4></div>`;
+        container.innerHTML += html;
+    }
+
+    localStorage.setItem("cachedGrandTotal", grandTotal);
+    updateDashboardMetrics(); rebuildAdaptiveSelectors(); refreshAll();
+}
+
+window.toggleDayCompletion = function(day, checkboxElement) {
+    let targetCard = document.getElementById(`divActualDayCard-${day}`);
+    if (checkboxElement.checked) {
+        if (!completedDays.includes(day)) completedDays.push(day);
+        if (targetCard) targetCard.classList.add("completed-day");
+    } else {
+        completedDays = completedDays.filter(d => d !== day);
+        if (targetCard) targetCard.classList.remove("completed-day");
+    }
+    localStorage.setItem("completedDays", JSON.stringify(completedDays));
+};
+
+// BUDGET FORECAST METRICS ENGINE
+function updateDashboardMetrics() {
+    let learners = parseInt(document.getElementById("numLearners").value) || 0;
+    let costPerLearner = parseFloat(document.getElementById("costPerLearner").value) || 0;
+    let bDays = parseInt(document.getElementById("budgetDays").value) || 0;
+    let gDays = parseInt(document.getElementById("genDaysInput").value) || 0;
+    
+    let totalBudget = costPerLearner * learners * bDays;
+    let cachedGrandTotal = parseFloat(localStorage.getItem("cachedGrandTotal")) || 0;
+    let remainingBudget = totalBudget - cachedGrandTotal;
+
+    if(document.getElementById("cardBudget")) document.getElementById("cardBudget").innerText = "₱" + totalBudget.toLocaleString('en-US', {minimumFractionDigits:2});
+    if(document.getElementById("cardCost")) document.getElementById("cardCost").innerText = "₱" + cachedGrandTotal.toLocaleString('en-US', {minimumFractionDigits:2});
+    if(document.getElementById("cardRemaining")) {
+        document.getElementById("cardRemaining").innerText = "₱" + remainingBudget.toLocaleString('en-US', {minimumFractionDigits:2});
+        document.getElementById("cardRemaining").style.color = remainingBudget < 0 ? "#ef4444" : "#10b981";
+    }
+    let uniqueDaysConfigured = new Set(menuList.map(m => m.day)).size;
+    if(document.getElementById("cardDays")) document.getElementById("cardDays").innerText = `${uniqueDaysConfigured} / 20`;
+    
+    if(document.getElementById("summaryGrandTotal")) document.getElementById("summaryGrandTotal").innerText = "₱" + cachedGrandTotal.toLocaleString('en-US', {minimumFractionDigits:2});
+    if(document.getElementById("summaryBudget")) document.getElementById("summaryBudget").innerText = "₱" + totalBudget.toLocaleString('en-US', {minimumFractionDigits:2});
+    if(document.getElementById("summaryRemaining")) document.getElementById("summaryRemaining").innerText = "₱" + remainingBudget.toLocaleString('en-US', {minimumFractionDigits:2});
+    if(document.getElementById("summaryDays")) document.getElementById("summaryDays").innerText = gDays;
+    if(document.getElementById("summaryBudgetDays")) document.getElementById("summaryBudgetDays").innerText = bDays;
+}
+
+// ADAPTIVE SELECT DROPDOWNS
+function rebuildAdaptiveSelectors() {
+    let actualDays = parseInt(document.getElementById("genDaysInput").value) || 0;
+    let wSelect = document.getElementById("selectWeeklyTarget"), mSelect = document.getElementById("selectMonthlyTarget");
+    if(!wSelect || !mSelect) return;
+
+    let currentWVal = wSelect.value, currentMVal = mSelect.value;
+    wSelect.innerHTML = ""; mSelect.innerHTML = "";
+
+    let totalWeeksNeeded = Math.ceil(actualDays / 5) || 1;
+    for(let w = 1; w <= totalWeeksNeeded; w++) {
+        let opt = document.createElement("option"); opt.value = w; opt.textContent = `Week ${w} (Days ${(w-1)*5+1} - ${Math.min(w*5, actualDays)})`; wSelect.appendChild(opt);
+    }
+    let totalBlocksNeeded = Math.ceil(actualDays / 20) || 1;
+    for(let b = 1; b <= totalBlocksNeeded; b++) {
+        let opt = document.createElement("option"); opt.value = b; opt.textContent = `Cycle Block ${b} (Days ${(b-1)*20+1} - ${Math.min(b*20, actualDays)})`; mSelect.appendChild(opt);
+    }
+    if(currentWVal && currentWVal <= totalWeeksNeeded) wSelect.value = currentWVal;
+    if(currentMVal && currentMVal <= totalBlocksNeeded) mSelect.value = currentMVal;
+}
+
+document.getElementById("numLearners").addEventListener("input", function() { updateDashboardMetrics(); saveParameters(); refreshAll(); calculateMenuSetupTotals(); });
+document.getElementById("costPerLearner").addEventListener("input", function() { updateDashboardMetrics(); saveParameters(); refreshAll(); calculateMenuSetupTotals(); });
+document.getElementById("budgetDays").addEventListener("input", function() { updateDashboardMetrics(); saveParameters(); refreshAll(); });
+document.getElementById("genDaysInput").addEventListener("input", function() { 
+    document.getElementById("generateDays").value = this.value; updateDashboardMetrics(); saveParameters(); rebuildAdaptiveSelectors(); refreshAll(); 
+});
+
+function saveParameters() {
+    localStorage.setItem("numLearners", document.getElementById("numLearners").value); localStorage.setItem("costPerLearner", document.getElementById("costPerLearner").value);
+    localStorage.setItem("budgetDays", document.getElementById("budgetDays").value); localStorage.setItem("generateDays", document.getElementById("genDaysInput").value);
+}
+
+function saveData() {
+    localStorage.setItem("priceList", JSON.stringify(priceList)); localStorage.setItem("menuList", JSON.stringify(menuList)); localStorage.setItem("dishNames", JSON.stringify(dishNames));
+}
+
+function loadData() {
+    if (localStorage.getItem("numLearners")) document.getElementById("numLearners").value = localStorage.getItem("numLearners");
+    if (localStorage.getItem("costPerLearner")) document.getElementById("costPerLearner").value = localStorage.getItem("costPerLearner");
+    if (localStorage.getItem("budgetDays")) document.getElementById("budgetDays").value = localStorage.getItem("budgetDays");
+    if (localStorage.getItem("generateDays")) {
+        document.getElementById("genDaysInput").value = localStorage.getItem("generateDays"); document.getElementById("generateDays").value = localStorage.getItem("generateDays");
+    }
+    document.getElementById("dishName").value = dishNames[document.getElementById("menuDay").value] || "";
+
+    renderPriceTable(); renderMenuTable(); updateMenuDropdown(); updateDashboardMetrics(); rebuildAdaptiveSelectors(); calculateMenuSetupTotals(); refreshAll();
+    if(menuList.length > 0) { runExtrapolationEngine(); }
+}
+
+window.onload = loadData;
+
+document.getElementById("selectWeeklyTarget").addEventListener("change", generatePurchaseOrders);
+document.getElementById("selectMonthlyTarget").addEventListener("change", generatePurchaseOrders);
+
+// 💥 FULLY OPTIMIZED LOGISTICS ENGINE: STRICT CATEGORY FILTER & GROUPING (V16.0 Pro)
+function generatePurchaseOrders() {
+    let weeklyBody = document.getElementById("weeklyOrderBody"), 
+        monthlyBody = document.getElementById("monthlyOrderBody"), 
+        fullBody = document.getElementById("fullOrderBody");
+        
+    if(!weeklyBody || !monthlyBody || !fullBody) return;
+    weeklyBody.innerHTML = ""; monthlyBody.innerHTML = ""; fullBody.innerHTML = "";
+
+    let actualDays = parseInt(document.getElementById("genDaysInput").value) || 0;
+    let selectedWeek = parseInt(document.getElementById("selectWeeklyTarget").value) || 1;
+    let startWeeklyDay = (selectedWeek - 1) * 5 + 1, endWeeklyDay = Math.min(selectedWeek * 5, actualDays);
+
+    let selectedMonthBlock = parseInt(document.getElementById("selectMonthlyTarget").value) || 1;
+    let startMonthlyDay = (selectedMonthBlock - 1) * 20 + 1, endMonthlyDay = Math.min(selectedMonthBlock * 20, actualDays);
+
+    let weeklyMap = {}, monthlyMap = {}, fullContractMap = {};
+
+    // 1. DATA GATHERING LOOP (Extrapolation Engine remains clean)
+    for (let day = 1; day <= actualDays; day++) {
+        let cycleDay = ((day - 1) % 20) + 1;
+        let activeItems = menuList.filter(m => parseInt(m.day) === cycleDay);
+
+        activeItems.forEach(item => {
+            if (!fullContractMap[item.item]) fullContractMap[item.item] = { category: item.category, unit: item.unit, price: item.price, totalQty: 0 };
+            fullContractMap[item.item].totalQty += parseFloat(item.qty);
+
+            if (day >= startWeeklyDay && day <= endWeeklyDay) {
+                if (!weeklyMap[item.item]) weeklyMap[item.item] = { category: item.category, unit: item.unit, price: item.price, totalQty: 0 };
+                weeklyMap[item.item].totalQty += parseFloat(item.qty);
+            }
+            if (day >= startMonthlyDay && day <= endMonthlyDay) {
+                if (!monthlyMap[item.item]) monthlyMap[item.item] = { category: item.category, unit: item.unit, price: item.price, totalQty: 0 };
+                monthlyMap[item.item].totalQty += parseFloat(item.qty);
+            }
+        });
+    }
+
+    // 📌 2. A. WEEKLY ORDER MANIFEST (Strictly Sorted & Grouped by Perishable Categories)
+    let perishableCategories = ["Meat/Poultry", "Vegetables"];
+    perishableCategories.forEach(currentCat => {
+        let hasWeeklyItems = false;
+        let weeklyRowsHtml = "";
+
+        Object.keys(weeklyMap).forEach(itemName => {
+            let meta = weeklyMap[itemName];
+            if (meta.category === currentCat) {
+                hasWeeklyItems = true;
+                weeklyRowsHtml += `<tr>
+                    <td><span style="font-weight:600; color:${currentCat === 'Vegetables' ? '#27ae60' : '#c0392b'}">${meta.category}</span></td>
+                    <td><strong>${itemName}</strong></td>
+                    <td>${meta.totalQty.toFixed(2)}</td>
+                    <td>${meta.unit}</td>
+                    <td>₱${meta.price.toFixed(2)}</td>
+                    <td style="color:#e74c3c; font-weight:bold;">₱${(meta.totalQty * meta.price).toFixed(2)}</td>
+                </tr>`;
+            }
+        });
+
+        // Inserts a clean, mobile-friendly sub-header category row
+        if (hasWeeklyItems) {
+            weeklyBody.innerHTML += `<tr style="background: #fff5f5; font-weight: bold; font-size: 11px;"><td colspan="6" style="color: #b91c1c;">📦 PRE-SORTED: ${currentCat.toUpperCase()}</td></tr>`;
+            weeklyBody.innerHTML += weeklyRowsHtml;
+        }
+    });
+
+    // 📌 3. B. GROCERIES LOOP MANIFEST (Non-Perishables - Every 20 Days Block)
+    Object.keys(monthlyMap).forEach(itemName => {
+        let meta = monthlyMap[itemName], catLower = meta.category.toLowerCase();
+        // Filters out any item that isn't a grocery item
+        if (!catLower.includes("meat") && !catLower.includes("poul") && !catLower.includes("sea") && !catLower.includes("veg")) {
+            monthlyBody.innerHTML += `<tr>
+                <td><span style="font-weight:600; color:#8e44ad;">${meta.category}</span></td>
+                <td><strong>${itemName}</strong></td>
+                <td>${meta.totalQty.toFixed(2)}</td>
+                <td>${meta.unit}</td>
+                <td>₱${meta.price.toFixed(2)}</td>
+                <td style="color:#8e44ad; font-weight:bold;">₱${(meta.totalQty * meta.price).toFixed(2)}</td>
+            </tr>`;
+        }
+    });
+
+    // 📌 4. C. GRAND SUPPLIER LOGISTICS PLANNER MATRIX (Whole Contract Span View)
+    let categoriesList = ["Meat/Poultry", "Vegetables", "Groceries"];
+    categoriesList.forEach(currentCategoryGroup => {
+        let categoryHasItems = false;
+        let subHtmlGroupRows = "";
+        
+        Object.keys(fullContractMap).forEach(itemName => {
+            let meta = fullContractMap[itemName];
+            if (meta.category === currentCategoryGroup) {
+                categoryHasItems = true;
+                subHtmlGroupRows += `<tr>
+                    <td style="color:#555; font-size:12px;">↳ ${meta.category} Item</td>
+                    <td><strong>${itemName}</strong></td>
+                    <td>${meta.totalQty.toFixed(2)}</td>
+                    <td>${meta.unit}</td>
+                    <td>₱${meta.price.toFixed(2)}</td>
+                    <td style="color:#27ae60; font-weight:bold;">₱${(meta.totalQty * meta.price).toLocaleString('en-US',{minimumFractionDigits:2})}</td>
+                </tr>`;
+            }
+        });
+
+        if (categoryHasItems) {
+            fullBody.innerHTML += `<tr><td colspan="6" class="category-row-header">📁 CATEGORY GROUP: ${currentCategoryGroup}</td></tr>`;
+            fullBody.innerHTML += subHtmlGroupRows;
+        }
+    });
+}
+
+function generateCategorySummary() {
+    let summary = {}, targetDays = parseInt(document.getElementById("genDaysInput").value) || 0;
+    for (let i = 1; i <= targetDays; i++) {
+        let cycleDay = ((i - 1) % 20) + 1;
+        menuList.filter(m => parseInt(m.day) === cycleDay).forEach(m => {
+            if (!summary[m.category]) summary[m.category] = { qty: 0, total: 0 };
+            summary[m.category].qty += parseFloat(m.qty); summary[m.category].total += parseFloat(m.total);
+        });
+    }
+    let tbody = document.getElementById("categorySummary"); if (!tbody) return; tbody.innerHTML = "";
+    Object.keys(summary).forEach(cat => { tbody.innerHTML += `<tr><td><strong>${cat}</strong></td><td>${summary[cat].qty.toFixed(2)}</td><td>₱${summary[cat].total.toLocaleString('en-US',{minimumFractionDigits:2})}</td></tr>`; });
+}
+
+function generateFiveDaySummary() {
+    let tbody = document.getElementById("fiveDaySummary"); if (!tbody) return; tbody.innerHTML = "";
+    let groups = {}, targetDays = parseInt(document.getElementById("genDaysInput").value) || 0;
+
+    for (let i = 1; i <= targetDays; i++) {
+        let group = Math.ceil(i / 5), cycleDay = ((i - 1) % 20) + 1, items = menuList.filter(m => parseInt(m.day) === cycleDay);
+        if (!groups[group]) groups[group] = { meat: 0, veg: 0, gro: 0, total: 0 };
+        items.forEach(m => {
+            let cat = m.category.toLowerCase();
+            if (cat.includes("meat") || cat.includes("poul") || cat.includes("sea")) groups[group].meat += m.total;
+            else if (cat.includes("veg")) groups[group].veg += m.total;
+            else groups[group].gro += m.total;
+            groups[group].total += m.total;
+        });
+    }
+    Object.keys(groups).forEach(g => {
+        tbody.innerHTML += `<tr><td><strong>Days ${(g-1)*5+1} - ${Math.min(g*5, targetDays)}</strong></td><td>₱${groups[g].meat.toFixed(2)}</td><td>₱${groups[g].veg.toFixed(2)}</td><td>₱${groups[g].gro.toFixed(2)}</td><td><strong>₱${groups[g].total.toFixed(2)}</strong></td></tr>`;
+    });
+}
+
+function refreshAll() { generateCategorySummary(); generateFiveDaySummary(); generatePurchaseOrders(); }
+
+window.exportLogisticsToExcel = function() {
+    let csvContent = "data:text/csv;charset=utf-8,SBFP PROCUREMENT MATRIX - DEV: ROMULO J. Jacinto JR.\r\n\r\n";
+    csvContent += "Category/Group Block,Item Name,Total Volumetric Qty,Unit,Unit Price,Grand Payable Total\r\n";
+    document.querySelectorAll("#fullOrderTable tr").forEach(row => {
+        let cols = row.querySelectorAll("td");
+        if(cols.length > 0) csvContent += Array.from(cols).map(v => v.innerText.replace(/₱|,|📁 CATEGORY GROUP:/g, "")).join(",") + "\r\n";
+    });
+    let encodedUri = encodeURI(csvContent);
+    let link = document.createElement("a"); link.setAttribute("href", encodedUri); link.setAttribute("download", `SBFP_Logistics_Master_Grouped.csv`);
+    document.body.appendChild(link); link.click(); document.body.removeChild(link);
+};
+</script>
+</body>
+</html>
